@@ -1,11 +1,6 @@
 // routes/auth.js
 const router = require('express').Router()
-const {
-  register,
-  login,
-  getUser,
-  logout
-} = require('../controllers/authController')
+const { register, login, getUser, logout } = require('../controllers/authController')
 const { protect } = require('../middleware/authMiddleware')
 
 router.post('/register', register)
