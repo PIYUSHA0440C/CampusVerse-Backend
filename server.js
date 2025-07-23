@@ -1,12 +1,11 @@
 // server.js
-
 require('dotenv').config()
 const express      = require('express')
 const mongoose     = require('mongoose')
 const cors         = require('cors')
 const cookieParser = require('cookie-parser')
 
-// Your route modules
+// Route modules
 const authRouter     = require('./routes/auth')
 const eventRouter    = require('./routes/event')
 const resourceRouter = require('./routes/resource')
@@ -15,30 +14,30 @@ const chatRouter     = require('./routes/chat')
 
 const app = express()
 
-// Trust the first proxy (needed for Render, Heroku, etc.)
+// Trust first proxy (needed for secure cookies on Render)
 app.set('trust proxy', 1)
 
-// CORS: allow your GitHub Pages front-end + your own backend origin
+// CORS: allow GitHub Pages frontend + self
 const CLIENT_ORIGINS = [
   'https://piyusha0440c.github.io',
+  'https://piyusha0440c.github.io/campusverse-frontend',
   'https://campusverse-backend.onrender.com'
 ]
-
 app.use(cors({
   origin: CLIENT_ORIGINS,
   credentials: true
 }))
 
-// Parse JSON & Cookies
+// Body + Cookie parsers
 app.use(express.json())
 app.use(cookieParser())
 
 // Mount routers
-app.use('/api/auth',      authRouter)     // register, login, logout, /user
-app.use('/api/events',    eventRouter)    // POST + GET /events
-app.use('/api/resources', resourceRouter) // POST + GET /resources
-app.use('/api/books',     bookRouter)     // lend/borrow/accept/list
-app.use('/api/chat',      chatRouter)     // global, group, 1-to-1
+app.use('/api/auth',      authRouter)
+app.use('/api/events',    eventRouter)
+app.use('/api/resources', resourceRouter)
+app.use('/api/books',     bookRouter)
+app.use('/api/chat',      chatRouter)
 
 // Connect to MongoDB & start server
 mongoose.connect(process.env.MONGO_URI, {
@@ -48,7 +47,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => {
   console.log('✅ MongoDB connected')
   const PORT = process.env.PORT || 5000
-  app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`))
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
 })
 .catch(err => {
   console.error('❌ MongoDB connection error:', err)
