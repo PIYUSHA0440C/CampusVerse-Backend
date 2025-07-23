@@ -1,8 +1,7 @@
 // controllers/authController.js
-
 const bcrypt = require('bcryptjs')
 const jwt    = require('jsonwebtoken')
-const User   = require('../models/User') // adjust path if needed
+const User   = require('../models/User')
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
@@ -11,17 +10,14 @@ exports.register = async (req, res) => {
     if (!username || !email || !password || !college) {
       return res.status(400).json({ message: 'Missing fields' })
     }
-
     const hash = await bcrypt.hash(password, 12)
     await User.create({ username, email, password: hash, college })
     res.status(201).json({ message: 'Registered' })
   } catch (err) {
-    console.error(err)
     res.status(400).json({
-      message:
-        err.code === 11000
-          ? 'Username or email already taken'
-          : 'Registration error'
+      message: err.code === 11000
+        ? 'Username or email already taken'
+        : 'Registration error'
     })
   }
 }
@@ -31,33 +27,28 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body
     const user = await User.findOne({ username })
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' })
-    }
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' })
 
     const match = await bcrypt.compare(password, user.password)
-    if (!match) {
-      return res.status(401).json({ message: 'Invalid credentials' })
-    }
+    if (!match) return res.status(401).json({ message: 'Invalid credentials' })
 
-    // Create JWT
+    // Generate JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: '7d'
     })
 
-    // Set cookie for cross-site usage
+    // Set secure, cross-site cookie
     res.cookie('token', token, {
       httpOnly: true,
       secure:   true,
       sameSite: 'none',
-      domain:   'campusverse-backend.onrender.com', // <-- your backend domain
+      domain:   'campusverse-backend.onrender.com', // your backend domain
       path:     '/',
       maxAge:   7 * 24 * 60 * 60 * 1000            // 7 days
     })
 
     res.json({ message: 'Logged in' })
-  } catch (err) {
-    console.error(err)
+  } catch {
     res.status(500).json({ message: 'Login error' })
   }
 }
@@ -68,8 +59,7 @@ exports.getUser = async (req, res) => {
     const user = await User.findById(req.userId)
     if (!user) return res.status(404).end()
     res.json({ username: user.username, college: user.college })
-  } catch (err) {
-    console.error(err)
+  } catch {
     res.status(500).end()
   }
 }
@@ -80,7 +70,7 @@ exports.logout = (req, res) => {
     httpOnly: true,
     secure:   true,
     sameSite: 'none',
-    domain:   'campusverse-backend.onrender.com', // match login
+    domain:   'campusverse-backend.onrender.com', // match above
     path:     '/'
   })
   res.json({ message: 'Logged out' })
