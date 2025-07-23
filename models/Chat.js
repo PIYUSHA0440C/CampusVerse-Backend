@@ -1,12 +1,35 @@
 // models/Chat.js
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
+const { Schema } = mongoose
 
-const chatSchema = new mongoose.Schema({
-  type:         { type: String, enum:['global','group','private'], required: true },
-  sender:       { type: mongoose.Schema.Types.ObjectId, ref:'User', required: true },
-  text:         { type: String, required: true },
-  groupName:    { type: String },           // for group chat
-  participants: [{ type: String }]          // for private: ["alice_bob"]
-}, { timestamps: true });
+const chatSchema = new Schema({
+  kind: {
+    type: String,
+    enum: ['global','group','one-to-one'],
+    required: true
+  },
+  sender: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  // for group chat:
+  college: {
+    type: String
+  },
+  // for one-to-one:
+  receiver: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  text: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+})
 
-module.exports = mongoose.model('Chat', chatSchema);
+module.exports = mongoose.model('Chat', chatSchema)
