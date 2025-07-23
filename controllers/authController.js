@@ -1,62 +1,71 @@
-const bcrypt = require('bcryptjs')
-const jwt    = require('jsonwebtoken')
-const User   = require('../models/User')
+// controllers/authController.js
+const bcrypt = require('bcryptjs');
+const User   = require('../models/User');
+const generateToken = require('../utils/generateToken');
 
 exports.register = async (req, res) => {
+  const { username, email, college, password } = req.body;
   try {
-    const { username, email, password, college } = req.body
-    if (!username || !email || !password || !college)
-      return res.status(400).json({ message: 'Missing fields' })
+    // Check if username or email exists
+    const exists = await User.findOne({
+      $or: [{ username }, { email }]
+    });
+    if (exists) {
+      return res.status(400).json({ message: 'Username or email in use' });
+    }
 
-    const hash = await bcrypt.hash(password, 12)
-    const user = await User.create({ username, email, password: hash, college })
+    // Hash password & create user
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, email, college, password: hash });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    // Issue JWT cookie
+    const token = generateToken(user._id);
     res.cookie('token', token, {
-      httpOnly: true, secure: true, sameSite: 'none', path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
-    res.status(201).json({ message: 'Registered' })
+      httpOnly: true,
+      secure: process.env.NODE_ENV==='production',
+      sameSite: 'lax',
+      maxAge: 7*24*60*60*1000
+    });
+
+    res.status(201).json({ username: user.username });
   } catch (err) {
-    res.status(400).json({
-      message: err.code === 11000
-        ? 'Username or email already taken'
-        : 'Registration error'
-    })
+    console.error('Register error:', err);
+    res.status(500).json({ message: 'Registration failed' });
   }
-}
+};
 
 exports.login = async (req, res) => {
+  const { username, password } = req.body;
   try {
-    const { username, password } = req.body
-    const user = await User.findOne({ username })
-    if (!user || !(await bcrypt.compare(password, user.password)))
-      return res.status(401).json({ message: 'Invalid credentials' })
+    const user = await User.findOne({ username });
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ message: 'Invalid credentials' });
+
+    const token = generateToken(user._id);
     res.cookie('token', token, {
-      httpOnly: true, secure: true, sameSite: 'none', path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
-    res.json({ message: 'Logged in' })
-  } catch {
-    res.status(500).json({ message: 'Login error' })
+      httpOnly: true,
+      secure: process.env.NODE_ENV==='production',
+      sameSite: 'lax',
+      maxAge: 7*24*60*60*1000
+    });
+    res.json({ username: user.username });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Login failed' });
   }
-}
+};
 
-exports.getUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.userId)
-    if (!user) return res.status(404).end()
-    res.json({ username: user.username, college: user.college })
-  } catch {
-    res.status(500).end()
-  }
-}
+exports.getUser = (req, res) => {
+  const { username, college } = req.user;
+  res.json({ username, college });
+};
 
 exports.logout = (req, res) => {
   res.clearCookie('token', {
-    httpOnly: true, secure: true, sameSite: 'none', path: '/'
-  })
-  res.json({ message: 'Logged out' })
-}
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV==='production'
+  });
+  res.json({ message: 'Logged out' });
+};
