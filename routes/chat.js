@@ -1,47 +1,22 @@
-const express = require('express')
-const router  = express.Router()
-const Chat    = require('../models/Chat')
-const User    = require('../models/User')
-const { protect } = require('../middleware/authMiddleware')
+// routes/chat.js
+const router = require('express').Router();
+const { protect } = require('../middleware/authMiddleware');
+const {
+  getGlobal,   sendGlobal,
+  getGroup,    sendGroup,
+  getPrivate,  sendPrivate
+} = require('../controllers/chatController');
 
-// GLOBAL CHAT
-router.get('/global', protect, async (req, res) => {
-  const msgs = await Chat.find({ kind: 'global' })
-    .sort('createdAt')
-    .populate('sender', 'username')
-  res.json(msgs)
-})
+// Global
+router.get('/global', protect, getGlobal);
+router.post('/global', protect, sendGlobal);
 
-router.post('/global', protect, async (req, res) => {
-  const c = await Chat.create({
-    kind:   'global',
-    sender: req.userId,
-    text:   req.body.text
-  })
-  res.status(201).json(c)
-})
+// Group
+router.get('/group/:groupName', protect, getGroup);
+router.post('/group',           protect, sendGroup);
 
-// GROUP CHAT
-router.get('/group', protect, async (req, res) => {
-  const user = await User.findById(req.userId)
-  const msgs = await Chat.find({
-    kind:    'group',
-    college: user.college
-  })
-    .sort('createdAt')
-    .populate('sender', 'username')
-  res.json(msgs)
-})
+// Private
+router.get('/private/:withUser', protect, getPrivate);
+router.post('/private',          protect, sendPrivate);
 
-router.post('/group', protect, async (req, res) => {
-  const user = await User.findById(req.userId)
-  const c = await Chat.create({
-    kind:    'group',
-    sender:  req.userId,
-    college: user.college,
-    text:    req.body.text
-  })
-  res.status(201).json(c)
-})
-
-module.exports = router
+module.exports = router;
