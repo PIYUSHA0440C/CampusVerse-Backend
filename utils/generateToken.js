@@ -1,10 +1,9 @@
-// utils/generateToken.js
-const jwt = require('jsonwebtoken');
+// routes/resource.js
+const router = require('express').Router();
+const { protect } = require('../middleware/authMiddleware');
+const { addResource, getResources } = require('../controllers/resourceController');
 
-function generateToken(userId) {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d'
-  });
-}
+router.get('/',   getResources);
+router.post('/',  protect, addResource);
 
-module.exports = generateToken;
+module.exports = router;
