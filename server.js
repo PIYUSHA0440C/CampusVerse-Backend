@@ -14,7 +14,6 @@ app.set('trust proxy', 1)
 app.use(cors({
   origin: [
     'https://piyusha0440c.github.io',
-    'https://piyusha0440c.github.io/campusverse-frontend',
     'https://campusverse-backend.onrender.com'
   ],
   credentials: true
@@ -22,8 +21,8 @@ app.use(cors({
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/api/auth', authRouter)
-app.use('/api/chat', chatRouter)
+app.use('/api/auth',  authRouter)
+app.use('/api/chat',  chatRouter)
 app.use('/api/users', userRouter)
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -33,6 +32,6 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => {
   console.log('✅ MongoDB connected')
   const PORT = process.env.PORT || 5000
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
+  app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`))
 })
 .catch(err => console.error('❌ MongoDB error:', err))
