@@ -5,64 +5,56 @@ const Chat    = require('../models/Chat')
 const User    = require('../models/User')
 const { protect } = require('../middleware/authMiddleware')
 
-// … (global & group routes unchanged) …
+// … global & group omitted for brevity …
 
-// ONE-TO-ONE – contacts list
+// ONE-TO-ONE – contacts
 router.get('/one-to-one/contacts', protect, async (req, res) => {
-  const userId = req.userId
   const msgs = await Chat.find({
-    kind: 'one-to-one',
-    $or: [{ sender: userId }, { receiver: userId }]
+    kind:'one-to-one',
+    $or:[{ sender:req.userId },{ receiver:req.userId }]
   })
   const set = new Set()
   msgs.forEach(m => {
-    const other = m.sender.equals(userId) ? m.receiver : m.sender
+    const other = m.sender.equals(req.userId) ? m.receiver : m.sender
     set.add(other.toString())
   })
-  const users = await User.find({ _id: { $in: [...set] } })
-  res.json(users.map(u => ({ username: u.username })))
+  const users = await User.find({ _id:{ $in:[...set] } })
+  res.json(users.map(u=>({ username:u.username })))
 })
 
-// ONE-TO-ONE – fetch conversation
+// ONE-TO-ONE – fetch
 router.get('/one-to-one/:username', protect, async (req, res) => {
-  const other = await User.findOne({ username: req.params.username })
-  if (!other) return res.status(404).json({ message: 'User not found' })
+  const other = await User.findOne({ username:req.params.username })
+  if (!other) return res.status(404).json({ message:'User not found' })
 
   const msgs = await Chat.find({
-    kind: 'one-to-one',
-    $or: [
-      { sender: req.userId,    receiver: other._id },
-      { sender: other._id,     receiver: req.userId }
+    kind:'one-to-one',
+    $or:[
+      { sender:req.userId, receiver:other._id },
+      { sender:other._id, receiver:req.userId }
     ]
   })
     .sort('createdAt')
-    .populate('sender', 'username')
+    .populate('sender','username')
 
+  console.log(`[CONVO] ${req.userId} ↔ ${other._id}: ${msgs.length} msgs`)
   res.json(msgs)
 })
 
-// ONE-TO-ONE – send message
+// ONE-TO-ONE – send
 router.post('/one-to-one/:username', protect, async (req, res) => {
-  try {
-    const other = await User.findOne({ username: req.params.username })
-    if (!other) return res.status(404).json({ message: 'User not found' })
+  const other = await User.findOne({ username:req.params.username })
+  if (!other) return res.status(404).json({ message:'User not found' })
 
-    console.log(`[ONE-TO-ONE] ${req.userId} → ${other._id}:`, req.body.text)
-
-    const c = await Chat.create({
-      kind:     'one-to-one',
-      sender:   req.userId,
-      receiver: other._id,
-      text:     req.body.text
-    })
-
-    // populate for frontend convenience
-    await c.populate('sender', 'username')
-    res.status(201).json(c)
-  } catch (err) {
-    console.error('[ONE-TO-ONE] send error:', err)
-    res.status(500).json({ message: 'Server error' })
-  }
+  console.log(`[SEND] ${req.userId} → ${other._id}: "${req.body.text}"`)
+  const c = await Chat.create({
+    kind:'one-to-one',
+    sender:req.userId,
+    receiver:other._id,
+    text:req.body.text
+  })
+  await c.populate('sender','username')
+  res.status(201).json(c)
 })
 
 module.exports = router
