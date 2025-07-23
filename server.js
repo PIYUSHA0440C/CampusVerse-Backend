@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config()
 const express      = require('express')
 const mongoose     = require('mongoose')
@@ -10,8 +9,8 @@ const userRouter = require('./routes/user')
 const chatRouter = require('./routes/chat')
 
 const app = express()
-
 app.set('trust proxy', 1)
+
 app.use(cors({
   origin: [
     'https://piyusha0440c.github.io',
@@ -33,7 +32,7 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
   console.log('✅ MongoDB connected')
-  const PORT = process.env.PORT||5000
-  app.listen(PORT, () => console.log(`🚀 Listening on ${PORT}`))
+  const PORT = process.env.PORT || 5000
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
 })
-.catch(err => console.error('MongoDB error', err))
+.catch(err => console.error('❌ MongoDB error:', err))
