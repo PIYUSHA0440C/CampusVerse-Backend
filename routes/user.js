@@ -4,7 +4,7 @@ const router  = express.Router()
 const User    = require('../models/User')
 const { protect } = require('../middleware/authMiddleware')
 
-// GET /api/users?search=abc
+// GET /api/users?search=foo
 router.get('/', protect, async (req, res) => {
   try {
     const { search } = req.query
@@ -14,9 +14,10 @@ router.get('/', protect, async (req, res) => {
     const users = await User.find(filter)
       .select('username')
       .limit(10)
+    console.log('[USER SEARCH]', search, '→', users.map(u=>u.username))
     res.json(users)
   } catch (err) {
-    console.error('User search error:', err)
+    console.error('[USER SEARCH ERROR]', err)
     res.status(500).json({ message: 'Server error' })
   }
 })
