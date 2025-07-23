@@ -18,7 +18,7 @@ router.get('/', protect, async (req, res) => {
     res.json(users)
   } catch (err) {
     console.error('[USER SEARCH ERROR]', err)
-    res.status(500).json({ message: 'Server error' })
+    res.status(500).json({ message:'Server error' })
   }
 })
 
