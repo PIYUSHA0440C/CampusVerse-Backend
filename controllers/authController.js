@@ -9,7 +9,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Missing fields' })
 
     const hash = await bcrypt.hash(password, 12)
-    await User.create({ username, email, password: hash, college })
+    const user = await User.create({ username, email, password: hash, college })
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    res.cookie('token', token, {
+      httpOnly: true, secure: true, sameSite: 'none', path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
     res.status(201).json({ message: 'Registered' })
   } catch (err) {
     res.status(400).json({
@@ -29,11 +35,8 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
     res.cookie('token', token, {
-      httpOnly: true,
-      secure:   true,
-      sameSite: 'none',
-      path:     '/',
-      maxAge:   7 * 24 * 60 * 60 * 1000
+      httpOnly: true, secure: true, sameSite: 'none', path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000
     })
     res.json({ message: 'Logged in' })
   } catch {
@@ -53,10 +56,7 @@ exports.getUser = async (req, res) => {
 
 exports.logout = (req, res) => {
   res.clearCookie('token', {
-    httpOnly: true,
-    secure:   true,
-    sameSite: 'none',
-    path:     '/'
+    httpOnly: true, secure: true, sameSite: 'none', path: '/'
   })
   res.json({ message: 'Logged out' })
 }
