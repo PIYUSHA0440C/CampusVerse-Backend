@@ -26,11 +26,19 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Missing fields' })
+    }
+
     const user = await User.findOne({ username })
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' })
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' })
+    }
 
     const match = await bcrypt.compare(password, user.password)
-    if (!match) return res.status(401).json({ message: 'Invalid credentials' })
+    if (!match) {
+      return res.status(401).json({ message: 'Invalid credentials' })
+    }
 
     // Generate JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -42,13 +50,13 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure:   true,
       sameSite: 'none',
-      domain:   'campusverse-backend.onrender.com', // your backend domain
       path:     '/',
-      maxAge:   7 * 24 * 60 * 60 * 1000            // 7 days
+      maxAge:   7 * 24 * 60 * 60 * 1000  // 7 days
     })
 
     res.json({ message: 'Logged in' })
-  } catch {
+  } catch (err) {
+    console.error(err)
     res.status(500).json({ message: 'Login error' })
   }
 }
@@ -59,7 +67,8 @@ exports.getUser = async (req, res) => {
     const user = await User.findById(req.userId)
     if (!user) return res.status(404).end()
     res.json({ username: user.username, college: user.college })
-  } catch {
+  } catch (err) {
+    console.error(err)
     res.status(500).end()
   }
 }
@@ -70,7 +79,6 @@ exports.logout = (req, res) => {
     httpOnly: true,
     secure:   true,
     sameSite: 'none',
-    domain:   'campusverse-backend.onrender.com', // match above
     path:     '/'
   })
   res.json({ message: 'Logged out' })
