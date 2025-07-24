@@ -40,18 +40,17 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' })
     }
 
-    // Generate JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: '7d'
     })
 
-    // Set secure, cross-site cookie
+    // ✅ Set cookie properly to override previous session
     res.cookie('token', token, {
       httpOnly: true,
-      secure:   true,
+      secure: true,
       sameSite: 'none',
-      path:     '/',
-      maxAge:   7 * 24 * 60 * 60 * 1000  // 7 days
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
     res.json({ message: 'Logged in' })
@@ -73,13 +72,13 @@ exports.getUser = async (req, res) => {
   }
 }
 
-// GET /api/auth/logout
+// ✅ GET /api/auth/logout — FULLY CLEAR COOKIE
 exports.logout = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure:   true,
+    secure: true,
     sameSite: 'none',
-    path:     '/'
+    path: '/'
   })
-  res.json({ message: 'Logged out' })
+  res.status(200).json({ message: 'Logged out' })
 }
