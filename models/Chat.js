@@ -1,7 +1,10 @@
-const chatSchema = new Schema({
-  kind: { // Changed from 'type' to 'kind' for consistency with routes
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const chatSchema = new Schema({ 
+  kind: {
     type: String,
-    enum: ['global','group','one-to-one'],
+    enum: ['global', 'group', 'one-to-one'],
     required: true
   },
   sender: {
@@ -14,7 +17,7 @@ const chatSchema = new Schema({
     type: String
   },
   // for one-to-one:
-  receiver: { // Added receiver field for one-to-one chats
+  receiver: {
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -26,5 +29,6 @@ const chatSchema = new Schema({
     type: Date,
     default: Date.now
   }
-})
-module.exports = mongoose.model('Chat', chatSchema)
+});
+
+module.exports = mongoose.model('Chat', chatSchema);
