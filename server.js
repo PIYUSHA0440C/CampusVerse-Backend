@@ -1,5 +1,4 @@
-
-  // server.js 
+// server.js 
 require('dotenv').config()
 
 const express      = require('express')
@@ -13,7 +12,7 @@ const eventRouter    = require('./routes/event')
 const resourceRouter = require('./routes/resource')
 const bookRouter     = require('./routes/book')
 const chatRouter     = require('./routes/chat')
-const userRouter     = require('./routes/users') // ✅ ADDED for user search route
+const userRouter     = require('./routes/user') // ✅ fixed: singular to match file name
 
 const app = express()
 
@@ -42,7 +41,7 @@ app.use('/api/events',    eventRouter)
 app.use('/api/resources', resourceRouter)
 app.use('/api/books',     bookRouter)
 app.use('/api/chat',      chatRouter)
-app.use('/api/users',     userRouter) // ✅ ADDED to enable user suggestions in one-to-one chat
+app.use('/api/users',     userRouter) // ✅ route still stays plural
 
 // Connect to MongoDB & start server
 mongoose
