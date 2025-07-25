@@ -1,7 +1,7 @@
 require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+const express      = require('express');
+const mongoose     = require('mongoose');
+const cors         = require('cors');
 const cookieParser = require('cookie-parser');
 
 // Routers
@@ -25,12 +25,14 @@ app.use(cors({ origin: CLIENT_ORIGINS, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// ─── Prevent any caching of authenticated responses ─────────────────
+// ─── Prevent any caching of authenticated responses ─────────────────────
 app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   next();
 });
-// ─────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────────
 
 app.use('/api/auth',      authRouter);
 app.use('/api/events',    eventRouter);
