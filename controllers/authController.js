@@ -46,8 +46,11 @@ exports.login = async (req, res) => {
       path:     '/',
       maxAge:   7 * 24 * 60 * 60 * 1000  // 7 days
     });
+
     // Prevent caching
-    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     res.json({ message: 'Logged in' });
   } catch (err) {
@@ -61,8 +64,12 @@ exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).end();
+
     // Prevent caching
-    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     res.json({ username: user.username, college: user.college });
   } catch (err) {
     console.error(err);
@@ -72,15 +79,27 @@ exports.getUser = async (req, res) => {
 
 // GET /api/auth/logout
 exports.logout = (req, res) => {
-  // Clear the token cookie
+  // 1) Clear the cookie (must match original settings)
   res.clearCookie('token', {
     httpOnly: true,
     secure:   true,
     sameSite: 'none',
     path:     '/'
-    // domain:   process.env.COOKIE_DOMAIN  // optional if needed
+    // domain:   process.env.COOKIE_DOMAIN // uncomment if you set domain originally
   });
-  // Prevent caching
-  res.setHeader('Cache-Control', 'no-store');
+  // 2) Overwrite with an expired cookie
+  res.cookie('token', '', {
+    httpOnly: true,
+    secure:   true,
+    sameSite: 'none',
+    path:     '/',
+    expires:  new Date(0)
+    // domain:   process.env.COOKIE_DOMAIN
+  });
+  // 3) Prevent caching
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   res.status(200).json({ message: 'Logged out' });
 };
