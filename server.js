@@ -10,7 +10,7 @@ const eventRouter    = require('./routes/event');
 const resourceRouter = require('./routes/resource');
 const bookRouter     = require('./routes/book');
 const chatRouter     = require('./routes/chat');
-const userRouter     = require('./routes/user'); // 🔹 Add this
+const userRouter     = require('./routes/user');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -25,13 +25,19 @@ app.use(cors({ origin: CLIENT_ORIGINS, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Mount routers
+// ─── Prevent any caching of authenticated responses ─────────────────
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+// ─────────────────────────────────────────────────────────────────────
+
 app.use('/api/auth',      authRouter);
 app.use('/api/events',    eventRouter);
 app.use('/api/resources', resourceRouter);
 app.use('/api/books',     bookRouter);
 app.use('/api/chat',      chatRouter);
-app.use('/api/users',     userRouter);  // 🔹 Add this
+app.use('/api/users',     userRouter);
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
