@@ -1,11 +1,12 @@
 // controllers/bookController.js
 const Book = require('../models/Book');
 
+// GET all books (feed)
 exports.getAll = async (_req, res) => {
   try {
     const books = await Book.find()
-      .populate('user','username')
-      .populate('acceptedBy','username')
+      .populate('user', 'username')
+      .populate('acceptedBy', 'username')
       .sort('-createdAt');
     res.json(books);
   } catch (err) {
@@ -14,11 +15,16 @@ exports.getAll = async (_req, res) => {
   }
 };
 
+// POST lend
 exports.postLend = async (req, res) => {
   try {
     const { title, author, description } = req.body;
     const book = await Book.create({
-      user: req.userId, type:'lend', title, author, description
+      user: req.user._id,
+      type: 'lend',
+      title,
+      author,
+      description
     });
     res.status(201).json(book);
   } catch (err) {
@@ -27,11 +33,15 @@ exports.postLend = async (req, res) => {
   }
 };
 
+// POST borrow
 exports.postBorrow = async (req, res) => {
   try {
     const { title, reason } = req.body;
     const book = await Book.create({
-      user: req.userId, type:'borrow', title, reason
+      user: req.user._id,
+      type: 'borrow',
+      title,
+      reason
     });
     res.status(201).json(book);
   } catch (err) {
@@ -40,14 +50,15 @@ exports.postBorrow = async (req, res) => {
   }
 };
 
+// PATCH accept borrow request
 exports.acceptRequest = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
-    if (!book || book.type!=='borrow') {
+    if (!book || book.type !== 'borrow') {
       return res.status(404).json({ message: 'Not found' });
     }
-    book.accepted   = true;
-    book.acceptedBy = req.userId;
+    book.accepted = true;
+    book.acceptedBy = req.user._id;
     await book.save();
     res.json(book);
   } catch (err) {
