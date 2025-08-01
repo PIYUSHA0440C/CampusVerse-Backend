@@ -18,7 +18,7 @@ app.set('trust proxy', 1);
 const CLIENT_ORIGINS = [
   'https://piyusha0440c.github.io',
   'https://piyusha0440c.github.io/campusverse-frontend',
-  'campusverseplatform.netlify.app',
+  'https://campusverseplatform.netlify.app',
   'https://campusverse-backend.onrender.com'
 ];
 
